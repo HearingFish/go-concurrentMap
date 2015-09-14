@@ -564,7 +564,7 @@ func (this *ConcurrentMap) newSegment(initialCapacity int, lf float32) (s *Segme
 	s.loadFactor = lf
 	table := make([]unsafe.Pointer, initialCapacity)
 	s.setTable(table)
-	s.lock = new(sync.Mutex)
+	s.lock = &sync.RWMutex{}
 	s.m = this
 	return
 }
@@ -749,7 +749,7 @@ type Segment struct {
 	 */
 	loadFactor float32
 
-	lock *sync.Mutex
+	lock *sync.RWMutex
 }
 
 func (this *Segment) enginer() *hashEnginer {
@@ -873,8 +873,8 @@ func (this *Segment) getFirst(hash uint32) *Entry {
  * but is not known to ever occur.
  */
 func (this *Segment) readValueUnderLock(e *Entry) interface{} {
-	this.lock.Lock()
-	defer this.lock.Unlock()
+	this.lock.RLock()
+	defer this.lock.RUnlock()
 	return e.fastValue()
 }
 
